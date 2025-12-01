@@ -25,13 +25,18 @@ jobs:
         docker build -t ghcr.io/${{ github.repository }}/transactions:${{ github.sha }} transactions/
         docker push ghcr.io/${{ github.repository }}/transactions:${{ github.sha }}
     
+    - name: Build & Push studentportfolio
+      run: |
+        docker build -t ghcr.io/${{ github.repository }}/studentportfolio:${{ github.sha }} studentportfolio/
+        docker push ghcr.io/${{ github.repository }}/studentportfolio:${{ github.sha }}
+    
     - name: Update GitOps repo
       run: |
         git clone https://${{ secrets.GITOPS_PAT }}@github.com/${{ secrets.GITOPS_REPO }}.git gitops
         cd gitops/k8s
-        sed -i "s|:sha-placeholder|:${{ github.sha }}|g" *-backend*.yaml *-transactions*.yaml
+        sed -i "s|:sha-placeholder|:${{ github.sha }}|g" backend-deployment.yaml transactions-deployment.yaml nginx-deployment.yaml studentportfolio-deployment.yaml
         git config user.name "${{ github.actor }}"
         git config user.email "${{ github.actor }}@users.noreply.github.com"
         git add .
-        git commit -m "Update images to ${{ github.sha }}"
+        git commit -m "Update images to ${{ github.sha }}" || exit 0
         git push origin main
